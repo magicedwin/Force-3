@@ -20,7 +20,7 @@ eval_bord(P, -1000) :-
     gagner(2, P), !.
 eval_bord(P, V) :-
     eval_value(1, P, ValueJ1),
-    eval_value(2, P, ValueJ2),
+    eval_value(-1, P, ValueJ2),
     V is ValueJ1 - ValueJ2.
 
 
@@ -53,8 +53,9 @@ score(1, 10) :- !.
 score(2, 50) :- !.
 score(3, 1000).
 
-minimax(0, Plateau, Player, Value, _) :- 
-    eval_value(Player, Plateau, Value).
+minimax(0, Plateau, _Player, Value, _) :- 
+    %eval_value(Player, Plateau, Value).
+    eval_bord(Plateau, Value).
 minimax(D, Plateau, Player, Value, Move) :-
     D > 0, 
     D1 is D - 1,
