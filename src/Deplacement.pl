@@ -1,4 +1,4 @@
-:- module(moduleDeplacement, [deplacement/4, gagner/2]).
+:- module(moduleDeplacement, [deplacement/4, gagner/2, get_opponent/2, row/3, column/3, diagonal/3]).
 
 % Poser un pion
 % Plateau = -1: taquet, 0: libre, 1: joueur1, 2: joueur2
@@ -76,26 +76,42 @@ setTableau(Valeur, Case, [X|R1], [X|R2]) :-
 % Retourne les cases adjacentes
 getCasesAdjacentes(0,1).
 getCasesAdjacentes(0,3).
+getCasesAdjacentes(0,4).
 getCasesAdjacentes(1,0).
 getCasesAdjacentes(1,2).
+getCasesAdjacentes(1,3).
 getCasesAdjacentes(1,4).
+getCasesAdjacentes(1,5).
 getCasesAdjacentes(2,1).
+getCasesAdjacentes(2,4).
 getCasesAdjacentes(2,5).
 getCasesAdjacentes(3,0).
+getCasesAdjacentes(3,1).
 getCasesAdjacentes(3,4).
 getCasesAdjacentes(3,6).
+getCasesAdjacentes(3,7).
+getCasesAdjacentes(4,0).
 getCasesAdjacentes(4,1).
+getCasesAdjacentes(4,2).
 getCasesAdjacentes(4,3).
 getCasesAdjacentes(4,5).
+getCasesAdjacentes(4,6).
 getCasesAdjacentes(4,7).
+getCasesAdjacentes(4,8).
+getCasesAdjacentes(5,1).
 getCasesAdjacentes(5,2).
 getCasesAdjacentes(5,4).
+getCasesAdjacentes(5,7).
 getCasesAdjacentes(5,8).
 getCasesAdjacentes(6,3).
+getCasesAdjacentes(6,4).
 getCasesAdjacentes(6,7).
+getCasesAdjacentes(7,3).
 getCasesAdjacentes(7,4).
+getCasesAdjacentes(7,5).
 getCasesAdjacentes(7,6).
 getCasesAdjacentes(7,8).
+getCasesAdjacentes(8,4).
 getCasesAdjacentes(8,5).
 getCasesAdjacentes(8,7).
 
@@ -168,3 +184,29 @@ gagner(Joueur, [Joueur,_,_,_,Joueur,_,_,_,Joueur]) :-
 gagner(Joueur, [_,_,Joueur,_,Joueur,_,Joueur,_,_]) :- 
     Joueur \= 0, 
     writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+
+% Unifie la séquence [E1, E2, E3] avec la Ième ligne du plateau PL
+row(PL, I, [E1, E2, E3]) :-
+    I1 is (I - 1) * 3, nth0(I1, PL, E1),
+    I2 is 3 * I - 2, nth0(I2, PL, E2),
+    I3 is 3 * I - 1, nth0(I3, PL, E3).
+
+% Unifie la séquence [E1, E2, E3] avec la Jème colonne du plateau PL
+column(PL, J, [E1, E2, E3]) :-
+    nth1(J, PL, E1),
+    I2 is J + 3, nth1(I2, PL, E2),
+    I3 is J + 6, nth1(I3, PL, E3).
+
+% Unifie la séquence [E1, E2, E3] avec la Nème diagonale du plateau PL
+diagonal(PL, 1, [E1,E2,E3]) :-
+    !, nth1(1, PL, E1),
+    nth1(5, PL, E2),
+    nth1(9, PL, E3).
+
+diagonal(PL, 2, [E1,E2,E3]) :-
+    nth1(3, PL, E1),
+    nth1(5, PL, E2),
+    nth1(7, PL, E3).
+
+get_opponent(1, 2) :- !.
+get_opponent(2, 1).

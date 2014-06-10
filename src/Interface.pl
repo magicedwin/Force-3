@@ -1,5 +1,6 @@
-:- module(moduleInterface, [initialisation/0, choixPartie/1, lancerPartie/1]).
+:- module(moduleInterface, [initialisation/0, choixPartie/1, lancerPartie/1, afficherPlateau/1]).
 :- use_module('Deplacement.pl').
+:- use_module('IA.pl').
 
 % Stock l'état du plateau
 :- dynamic board/1.
@@ -7,7 +8,7 @@
 % Initialisation du plateau à vide
 initialisation:-
     retractall(board(_)),
-    assert(board([0, 1, 1, 0, 0, -1, 2, 0, 0])),
+    assert(board([0, 0, 0, 0, -2, 0, 0, 0, 0])),
     board(P),
     afficherCoordonnees(P).
 
@@ -35,7 +36,22 @@ lancerPartie(0) :-
     board(Plateau),
     jouer(Plateau, Niveau).
 lancerPartie(1) :-
-	writeln('IA/IA').
+	nl,
+    writeln('Niveau (IA1) :'),
+    writeln('\t0.\tFacile'),
+    writeln('\t1.\tMoyen'),
+    writeln('\t2.\tDifficile'),
+    choixPartie(Niveau1),
+    Niveau11 is (Niveau1 + 1) * 2,
+    nl,
+    writeln('Niveau (IA2) :'),
+    writeln('\t0.\tFacile'),
+    writeln('\t1.\tMoyen'),
+    writeln('\t2.\tDifficile'),
+    choixPartie(Niveau2),
+    board(Plateau),
+    Niveau22 is (Niveau2 + 1) * 2,
+    observerIA(Niveau11, Niveau22, Plateau).
 lancerPartie(2) :- !.
 
 % Au tour du joueur de jouer
@@ -51,8 +67,30 @@ jouer(Plateau, Niveau) :-
 % Au tour de l'IA de jouer
 jouerIA(Plateau, Niveau) :-
     nl,
-    writeln('Code \u00E0 venir IA!'),
-    jouer(Plateau, Niveau).
+    board(_PlateauTemporaire),
+    Niveau1 is (Niveau + 1) * 2,
+    minimax(Niveau1, Plateau, -1, _Valeur, Coup),
+    sauvegarderCoup(-1, Coup),
+    board(NouveauPlateau),
+    afficherPlateau(NouveauPlateau),
+    not(gagner(-1, NouveauPlateau)),
+    jouer(NouveauPlateau, Niveau).
+
+% IA vs. IA
+observerIA(Niveau1, Niveau2, Plateau) :-
+    board(_PlateauTemporaire),
+    minimax(Niveau1, Plateau, 1, _Valeur, Coup),
+    sauvegarderCoup(1, Coup),
+    board(NouveauPlateau),
+    afficherPlateau(NouveauPlateau),
+    not(gagner(1, NouveauPlateau)),
+    board(_PlateauTemporaire2),
+    minimax(Niveau2, NouveauPlateau, -1, _Valeur2, Coup2),
+    sauvegarderCoup(-1, Coup2),
+    board(NouveauPlateau2),
+    afficherPlateau(NouveauPlateau2),
+    not(gagner(-1, NouveauPlateau2)),
+    observerIA(Niveau1, Niveau2, NouveauPlateau2).
 
 % Demande le type de placement ainsi que ses coordonnées à l'utlisateur
 % C1: Case d'origine, C2: Case de destination, Choix: Type d'action
@@ -122,11 +160,11 @@ afficherPlateau([C0, C1, C2, C3, C4, C5, C6, C7, C8]):-
 	write('+-+-+-+'), nl.
 
 % Affiche le contenu d'une case
-afficherCase(-1) :-
+afficherCase(-2) :-
     write('#').
 afficherCase(0) :-
     write(' ').
 afficherCase(1) :-
     write('o').
-afficherCase(2):-
+afficherCase(-1):-
     write('x').
