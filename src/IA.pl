@@ -1,5 +1,6 @@
-:- module(moduleIA, [minimax/5, eval_nb_move/3, eval_bord/2, eval_value/3, compute_points/3]).
+:- module(moduleIA, [minimax/6, eval_nb_move/3, eval_value/3, compute_points/3]).
 :- use_module('Deplacement.pl').
+:- use_module('Interface.pl').
 :- use_module(library(lists)).
 
 
@@ -8,21 +9,6 @@
 eval_nb_move(J, P, NbM) :-
     findall(_, deplacement(J, P, _, _), ListeMove),
     length(ListeMove, NbM).
-
-
-% eval_bord(+P, ?Value)
-% Permet de déterminer l'avantage d'un des deux joueurs.
-% Si la valeur de retour est positif, alors le joueur 1 à l'avantage. Et vise versa.
-% La valeur maximale est abs(100).
-eval_bord(P, 1000) :-
-    gagner(1, P), !.
-eval_bord(P, -1000) :-
-    gagner(2, P), !.
-eval_bord(P, V) :-
-    eval_value(1, P, ValueJ1),
-    eval_value(-1, P, ValueJ2),
-    V is ValueJ1 - ValueJ2.
-
 
 % eval_value(+J, +P, ?Value)
 % Retourne la valeur pour le joueur J
@@ -53,21 +39,24 @@ score(1, 10) :- !.
 score(2, 50) :- !.
 score(3, 1000).
 
-minimax(0, Plateau, _Player, Value, _) :- 
-    %eval_value(Player, Plateau, Value).
-    eval_bord(Plateau, Value).
-minimax(D, Plateau, Player, Value, Move) :-
+
+minimax(0, Plateau, Player, Value, _Move, _DernierCoup) :- 
+    eval_value(Player, Plateau, Value).
+minimax(D, Plateau, Player, Value, Move, DernierCoup) :-
     D > 0, 
     D1 is D - 1,
-    findall(M, deplacement(Player, Plateau, M, _), Moves),
+    findall(M, deplacement(Player, Plateau, M, _), Moves1),
+    coupInverse(DernierCoup, Inverse),
+    delete(Moves1, Inverse, Moves),
     minimax(Moves, Plateau, D1, Player, -1000, nil, Value, Move).
 
 minimax([], _, _, _, Value, Best, Value, Best).
 minimax([Move|Moves],Plateau,D,Player, Value0,Move0,BestValue,BestMove):-
     deplacement(Player, Plateau, Move, Plateau1),
     Opponent is -Player,
-    minimax(D, Plateau1, Opponent, OppValue, _OppMove), 
-    Value is -OppValue,
+    minimax(D, Plateau1, Opponent, OppValue, _OppMove, Move),
+    eval_value(Player, Plateau1, ValuePlayer),
+    Value is ValuePlayer - OppValue,
     ( Value > Value0 ->        
         minimax(Moves,Plateau,D,Player, Value ,Move ,BestValue,BestMove)
     ;   minimax(Moves,Plateau,D,Player, Value0,Move0,BestValue,BestMove)

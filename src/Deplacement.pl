@@ -1,4 +1,5 @@
-:- module(moduleDeplacement, [deplacement/4, gagner/2, get_opponent/2, row/3, column/3, diagonal/3]).
+:- module(moduleDeplacement, [deplacement/4, gagner/2, row/3, column/3, diagonal/3, nombrePions/3, listeVide/2, coupInverse/2]).
+:- use_module(library(random)).
 
 % Poser un pion
 % Plateau = -1: taquet, 0: libre, 1: joueur1, 2: joueur2
@@ -46,8 +47,8 @@ deplacement(Joueur, Plateau, [CaseOrigine, CaseDestination, 1], NouveauPlateau) 
 % Coup = [COrig, Cdest, 2]
 deplacement(_, Plateau, [CaseOrigine, CaseDestination, 2], NouveauPlateau) :-
     getTaquin1(CaseOrigine, CaseDestination),
-    nth0(CaseOrigine, Plateau, -1),
-    setTableau(-1, CaseDestination, Plateau, NouveauPlateauTmp),
+    nth0(CaseOrigine, Plateau, -2),
+    setTableau(-2, CaseDestination, Plateau, NouveauPlateauTmp),
     nth0(CaseDestination, Plateau, Valeur),
     setTableau(Valeur, CaseOrigine, NouveauPlateauTmp, NouveauPlateau).
 
@@ -56,15 +57,44 @@ deplacement(_, Plateau, [CaseOrigine, CaseDestination, 2], NouveauPlateau) :-
 % Coup = [COrig, Cdest, 3]
 deplacement(_, Plateau, [CaseOrigine, CaseDestination, 3], NouveauPlateau) :-
     getTaquin2(CaseOrigine, CaseDestination),
-    nth0(CaseOrigine, Plateau, -1),
-    setTableau(-1, CaseDestination, Plateau, NouveauPlateauTmp),
-    nth0(CaseDestination, Plateau, Valeur),
-    setTableau(Valeur, CaseOrigine, NouveauPlateauTmp, NouveauPlateau).
+    nth0(CaseOrigine, Plateau, -2),
+    setTableau(-2, CaseDestination, Plateau, NouveauPlateauTmp),
+    (CaseDestination > CaseOrigine ->
+        Soustraction is CaseDestination - CaseOrigine,
+        (Soustraction \= 2 ->
+            CaseTmp is CaseOrigine + 3
+        ;   CaseTmp is CaseOrigine + 1
+        )
+    ;   Soustraction is CaseOrigine - CaseDestination,
+        (Soustraction \= 2 ->
+            CaseTmp is CaseOrigine - 3
+        ;   CaseTmp is CaseOrigine - 1
+        )
+    ),
+    nth0(CaseTmp, Plateau, Valeur),
+    setTableau(Valeur, CaseOrigine, NouveauPlateauTmp, NouveauPlateauTmp1),
+    nth0(CaseDestination, Plateau, Valeur1),
+    setTableau(Valeur1, CaseTmp, NouveauPlateauTmp1, NouveauPlateau).
+
+
 
 % Retourne le nombre de pions d'un joueur
 nombrePions(Joueur, Plateau, Nombre) :-
     sublist(=(Joueur), Plateau, Liste),
     length(Liste, Nombre).
+
+listeVide(Plateau, Liste) :-
+    listeVide(0, Plateau, Liste).
+listeVide(_Compteur, [], _Liste).
+listeVide(Compteur, [X|R1], [Compteur|Liste]) :-
+    X == 0,
+    Compteur1 is Compteur + 1,
+    listeVide(Compteur1, R1, Liste).
+listeVide(Compteur, [X|R1], Liste) :-
+    X \= 0,
+    Compteur1 is Compteur + 1,
+    listeVide(Compteur1, R1, Liste).
+
 
 % Modification du plateau
 setTableau(Valeur, 0, [_|R], [Valeur|R]) :- !.
@@ -208,5 +238,6 @@ diagonal(PL, 2, [E1,E2,E3]) :-
     nth1(5, PL, E2),
     nth1(7, PL, E3).
 
-get_opponent(1, 2) :- !.
-get_opponent(2, 1).
+coupInverse([CaseDestination, CaseOrigine, TypePlacement], [CaseOrigine, CaseDestination, TypePlacement]).
+
+

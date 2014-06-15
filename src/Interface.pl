@@ -34,7 +34,8 @@ lancerPartie(0) :-
     writeln('\t2.\tDifficile'),
     choixPartie(Niveau),
     board(Plateau),
-    jouer(Plateau, Niveau).
+    Niveau1 is Niveau + 3,
+    jouer(Plateau, Niveau1).
 lancerPartie(1) :-
 	nl,
     writeln('Niveau (IA1) :'),
@@ -51,7 +52,7 @@ lancerPartie(1) :-
     choixPartie(Niveau2),
     board(Plateau),
     Niveau22 is (Niveau2 + 1) * 2,
-    observerIA(Niveau11, Niveau22, Plateau).
+    observerIA(Niveau11, Niveau22, Plateau, _DernierCoup).
 lancerPartie(2) :- !.
 
 % Au tour du joueur de jouer
@@ -59,38 +60,58 @@ jouer(Plateau, Niveau) :-
     afficherPlateau(Plateau),
     effectuerAction(Coup),
     sauvegarderCoup(1, Coup),
+    DernierCoup = Coup,
     board(NouveauPlateau),
     afficherPlateau(NouveauPlateau),
     not(gagner(1, NouveauPlateau)),
-    jouerIA(NouveauPlateau, Niveau).
+    jouerIA(NouveauPlateau, Niveau, DernierCoup).
 
 % Au tour de l'IA de jouer
-jouerIA(Plateau, Niveau) :-
+jouerIA(Plateau, Niveau, DernierCoup) :-
     nl,
     board(_PlateauTemporaire),
-    Niveau1 is (Niveau + 1) * 2,
-    minimax(Niveau1, Plateau, -1, _Valeur, Coup),
-    sauvegarderCoup(-1, Coup),
+    nombrePions(-1, Plateau, Nombre),
+    (Nombre == 0 ->
+        listeVide(Plateau, Liste),
+        random_member(Index, Liste),
+        sauvegarderCoup(-1, [-1, Index, 0])
+    ;   minimax(Niveau, Plateau, -1, _Value, Coup, DernierCoup),
+        sauvegarderCoup(-1, Coup)
+    ),
     board(NouveauPlateau),
     afficherPlateau(NouveauPlateau),
-    not(gagner(-1, NouveauPlateau)),
+    not(gagner(-1, NouveauPlateau)), !,
     jouer(NouveauPlateau, Niveau).
 
 % IA vs. IA
-observerIA(Niveau1, Niveau2, Plateau) :-
+observerIA(Niveau1, Niveau2, Plateau, DernierCoup) :-
     board(_PlateauTemporaire),
-    minimax(Niveau1, Plateau, 1, _Valeur, Coup),
-    sauvegarderCoup(1, Coup),
+    nombrePions(1, Plateau, Nombre),
+    (Nombre == 0 ->
+        listeVide(Plateau, Liste),
+        random_member(Index, Liste),
+        sauvegarderCoup(1, [-1, Index, 0]),
+        Coup = [-1, Index, 0]
+    ;   minimax(Niveau1, Plateau, 1, _Value, Coup, DernierCoup),
+        sauvegarderCoup(1, Coup)
+    ),
     board(NouveauPlateau),
     afficherPlateau(NouveauPlateau),
-    not(gagner(1, NouveauPlateau)),
+    not(gagner(1, NouveauPlateau)), !,
     board(_PlateauTemporaire2),
-    minimax(Niveau2, NouveauPlateau, -1, _Valeur2, Coup2),
-    sauvegarderCoup(-1, Coup2),
+    nombrePions(-1, NouveauPlateau, Nombre1),
+    (Nombre1 == 0 ->
+        listeVide(NouveauPlateau, Liste1),
+        random_member(Index1, Liste1),
+        sauvegarderCoup(-1, [-1, Index1, 0]),
+        Coup1 = [-1, Index1, 0]
+    ;   minimax(Niveau2, NouveauPlateau, -1, _Value1, Coup1, Coup),
+        sauvegarderCoup(-1, Coup1)
+    ),
     board(NouveauPlateau2),
     afficherPlateau(NouveauPlateau2),
-    not(gagner(-1, NouveauPlateau2)),
-    observerIA(Niveau1, Niveau2, NouveauPlateau2).
+    not(gagner(-1, NouveauPlateau2)), !,
+    observerIA(Niveau1, Niveau2, NouveauPlateau2, Coup1).
 
 % Demande le type de placement ainsi que ses coordonnées à l'utlisateur
 % C1: Case d'origine, C2: Case de destination, Choix: Type d'action
