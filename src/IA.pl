@@ -1,63 +1,57 @@
-:- module(moduleIA, [minimax/6, eval_nb_move/3, eval_value/3, compute_points/3]).
+:- module(moduleIA, [minimax/6]).
 :- use_module('Deplacement.pl').
-:- use_module('Interface.pl').
 :- use_module(library(lists)).
 
-
-% eval_nb_move(+J, +P, ?NbM)
-% retourne le nombre de coup NbC du joueur J pour le plateau P
-eval_nb_move(J, P, NbM) :-
-    findall(_, deplacement(J, P, _, _), ListeMove),
-    length(ListeMove, NbM).
-
-% eval_value(+J, +P, ?Value)
-% Retourne la valeur pour le joueur J
-eval_value(J, P, Value) :-
-    maplist(row(P), [1, 2, 3], Rows),
-    maplist(compute_points(J), Rows, PRows),
-    sumlist(PRows, PtsRows),
-    maplist(column(P), [1, 2, 3], Cols),
-    maplist(compute_points(J), Cols, PCols),
-    sumlist(PCols, PtsCols),
-    diagonal(P, 1, Prof1), compute_points(J, Prof1, PtsProf1),
-    diagonal(P, 2, Prof2), compute_points(J, Prof2, PtsProf2),
-    Value is PtsRows + PtsCols + PtsProf1 + PtsProf2.
+% evalPoints(+Joueur, +Plateau, ?Valeur)
+% Retourne la valeur du plateau pour un joueur
+evalPoints(Joueur, Plateau, Valeur) :-
+    maplist(ligne(Plateau), [1, 2, 3], Lignes),
+    maplist(calculPoints(Joueur), Lignes, ListePtsLignes),
+    sumlist(ListePtsLignes, PtsLignes),
+    maplist(colonne(Plateau), [1, 2, 3], Colonnes),
+    maplist(calculPoints(Joueur), Colonnes, ListePtsColonnes),
+    sumlist(ListePtsColonnes, PtsColonnes),
+    diagonale(Plateau, 1, Diagonale1), calculPoints(Joueur, Diagonale1, PtsDiagonale1),
+    diagonale(Plateau, 2, Diagonale2), calculPoints(Joueur, Diagonale2, PtsDiagonale2),
+    Valeur is PtsLignes + PtsColonnes + PtsDiagonale1 + PtsDiagonale2.
 
 
-% compute_points(+J, +List, ?Score)
-% Distribut un score en fonction du nombre de pionts allignés.
-compute_points(J, List, Score) :-
-    include(=:=(J), List, Filtered),
-    length(Filtered, Len),
-    score(Len, Score).
+% calculPoints(+Joueur, +Liste, ?Points)
+% Calcul le score en fonction du nombre de pions alignés.
+calculPoints(Joueur, Liste, Points) :-
+    include(=:=(Joueur), Liste, ListePions),
+    length(ListePions, Longueur),
+    score(Longueur, Points).
 
 
-% score(+NbPions, ?score)
+% score(+NbPions, ?Ccore)
 % Retourne le score associé au nombre de pionts alignés.
 score(0, 0) :- !.
 score(1, 10) :- !.
 score(2, 50) :- !.
 score(3, 1000).
 
-
-minimax(0, Plateau, Player, Value, _Move, _DernierCoup) :- 
-    eval_value(Player, Plateau, Value).
-minimax(D, Plateau, Player, Value, Move, DernierCoup) :-
+% minimax(+Profondeur, +Plateau, +Joueur, +Valeur, ?Coup, ?DernierCoup)
+% Algorithme MinMax afin de déterminer le meilleur coupp à jouer
+minimax(0, Plateau, Joueur, Valeur, _Coup, _DernierCoup) :- 
+    evalPoints(Joueur, Plateau, Valeur).
+minimax(D, Plateau, Joueur, Valeur, Coup, DernierCoup) :-
     D > 0, 
     D1 is D - 1,
-    findall(M, deplacement(Player, Plateau, M, _), Moves1),
+    findall(M, deplacement(Joueur, Plateau, M, _), Coups1),
     coupInverse(DernierCoup, Inverse),
-    delete(Moves1, Inverse, Moves),
-    minimax(Moves, Plateau, D1, Player, -1000, nil, Value, Move).
+    delete(Coups1, Inverse, Coups),
+    minimax(Coups, Plateau, D1, Joueur, -1000, nil, Valeur, Coup).
 
-minimax([], _, _, _, Value, Best, Value, Best).
-minimax([Move|Moves],Plateau,D,Player, Value0,Move0,BestValue,BestMove):-
-    deplacement(Player, Plateau, Move, Plateau1),
-    Opponent is -Player,
-    minimax(D, Plateau1, Opponent, OppValue, _OppMove, Move),
-    eval_value(Player, Plateau1, ValuePlayer),
-    Value is ValuePlayer - OppValue,
-    ( Value > Value0 ->        
-        minimax(Moves,Plateau,D,Player, Value ,Move ,BestValue,BestMove)
-    ;   minimax(Moves,Plateau,D,Player, Value0,Move0,BestValue,BestMove)
+% minimax(+ListeCoups, Plateau, Profondeur, Joueur, +ValeurCourante, +CoupCourant, ?BestValeur, ?BestCoup)
+minimax([], _, _, _, Valeur, Best, Valeur, Best).
+minimax([Coup|Coups],Plateau,D,Joueur, Valeur0,Coup0,BestValeur,BestCoup):-
+    deplacement(Joueur, Plateau, Coup, Plateau1),
+    Opponent is -Joueur,
+    minimax(D, Plateau1, Opponent, OppValeur, _OppCoup, Coup),
+    evalPoints(Joueur, Plateau1, ValeurJoueur),
+    Valeur is ValeurJoueur - OppValeur,
+    ( Valeur > Valeur0 ->        
+        minimax(Coups,Plateau,D,Joueur, Valeur ,Coup ,BestValeur,BestCoup)
+    ;   minimax(Coups,Plateau,D,Joueur, Valeur0,Coup0,BestValeur,BestCoup)
     ).

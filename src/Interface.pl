@@ -25,6 +25,9 @@ choixPartie(Choix) :-
     writeln('Choix invalide!'),
     choixPartie(Choix).
 
+% Choix des Pions
+% 0: 'O' commence la partie
+% 1: 'X' 
 choixPions(Choix) :-
     writeln('Quel est votre choix ?'),
     read(Choix),
@@ -36,6 +39,9 @@ choixPions(Choix) :-
     choixPions(Choix).
 
 % Lance la partie en fonction du choix du joueur
+% 0: Joueur contre IA
+% 1: IA contre IA
+% 2: Quitter
 lancerPartie(0) :-
     nl,
 	writeln('Niveau (IA) :'),
@@ -74,7 +80,9 @@ lancerPartie(2) :- !.
 
 % Au tour du joueur de jouer
 jouer(Plateau, Niveau, Joueur) :-
+    nl,
     afficherPlateau(Plateau),
+    writeln('A vous de jouer!'),
     effectuerAction(Coup),
     sauvegarderCoup(Joueur, Coup),
     board(NouveauPlateau),
@@ -97,12 +105,15 @@ jouerIA(Plateau, Niveau, DernierCoup, Joueur) :-
     ),
     board(NouveauPlateau),
     afficherPlateau(NouveauPlateau),
+    writeln('L\'IA vient de jouer!'),
     not(gagner(Joueur, NouveauPlateau)), !,
     Adversaire is -Joueur,
     jouer(NouveauPlateau, Niveau, Adversaire).
 
 % IA vs. IA
 observerIA(Niveau1, Niveau2, Plateau, DernierCoup) :-
+    nl,
+    % IA1
     board(_PlateauTemporaire),
     nombrePions(1, Plateau, Nombre),
     (Nombre == 0 ->
@@ -114,8 +125,11 @@ observerIA(Niveau1, Niveau2, Plateau, DernierCoup) :-
         sauvegarderCoup(1, Coup)
     ),
     board(NouveauPlateau),
+    writeln('IA1'),
     afficherPlateau(NouveauPlateau),
     not(gagner(1, NouveauPlateau)), !,
+    nl,
+    % IA2
     board(_PlateauTemporaire2),
     nombrePions(-1, NouveauPlateau, Nombre1),
     (Nombre1 == 0 ->
@@ -127,6 +141,7 @@ observerIA(Niveau1, Niveau2, Plateau, DernierCoup) :-
         sauvegarderCoup(-1, Coup1)
     ),
     board(NouveauPlateau2),
+    writeln('IA2'),
     afficherPlateau(NouveauPlateau2),
     not(gagner(-1, NouveauPlateau2)), !,
     observerIA(Niveau1, Niveau2, NouveauPlateau2, Coup1).
@@ -189,7 +204,6 @@ afficherCoordonnees([C0, C1, C2, C3, C4, C5, C6, C7, C8]):-
 
 % Affiche le contenu du plateau
 afficherPlateau([C0, C1, C2, C3, C4, C5, C6, C7, C8]):-
-    nl,
 	write('+-+-+-+'), nl,
 	write('|'), afficherCase(C0), write('|'), afficherCase(C1), write('|'), afficherCase(C2), write('|'), nl,
 	write('+-+-+-+'), nl,

@@ -1,8 +1,7 @@
-:- module(moduleDeplacement, [deplacement/4, gagner/2, row/3, column/3, diagonal/3, nombrePions/3, listeVide/2, coupInverse/2]).
-:- use_module(library(random)).
+:- module(moduleDeplacement, [deplacement/4, gagner/2, ligne/3, colonne/3, diagonale/3, nombrePions/3, listeVide/2, coupInverse/2]).
 
 % Poser un pion
-% Plateau = -1: taquet, 0: libre, 1: joueur1, 2: joueur2
+% Plateau = -2: taquet, 0: libre, 1: joueur1, -1: joueur2
 % Coup = [COrig, Cdest, TypePlacement]
 deplacement(Joueur, [0|R], [-1, 0, 0], [Joueur|R]) :-
     nombrePions(Joueur, [0|R], Nombre),
@@ -33,7 +32,7 @@ deplacement(Joueur, [C0, C1, C2, C3, C4, C5, C6, C7, 0|R], [-1, 8, 0], [C0, C1, 
     Nombre < 3.
 
 % Déplacer un pion
-% Plateau = -1: taquet, 0: libre, 1: joueur1, 2: joueur2
+% Plateau = -2: taquet, 0: libre, 1: joueur1, -1: joueur2
 % Coup = [COrig, Cdest, 1]
 deplacement(Joueur, Plateau, [CaseOrigine, CaseDestination, 1], NouveauPlateau) :-
     getCasesAdjacentes(CaseOrigine, CaseDestination),
@@ -43,7 +42,7 @@ deplacement(Joueur, Plateau, [CaseOrigine, CaseDestination, 1], NouveauPlateau) 
     setTableau(Joueur, CaseDestination, NouveauPlateauTmp, NouveauPlateau).
 
 % Déplacer le taquet d'une case
-% Plateau = -1: taquet, 0: libre, 1: joueur1, 2: joueur2
+% Plateau = -2: taquet, 0: libre, 1: joueur1, -1: joueur2
 % Coup = [COrig, Cdest, 2]
 deplacement(_, Plateau, [CaseOrigine, CaseDestination, 2], NouveauPlateau) :-
     getTaquin1(CaseOrigine, CaseDestination),
@@ -53,7 +52,7 @@ deplacement(_, Plateau, [CaseOrigine, CaseDestination, 2], NouveauPlateau) :-
     setTableau(Valeur, CaseOrigine, NouveauPlateauTmp, NouveauPlateau).
 
 % Déplacer le taquet de deux cases
-% Plateau = -1: taquet, 0: libre, 1: joueur1, 2: joueur2
+% Plateau = -2: taquet, 0: libre, 1: joueur1, -1: joueur2
 % Coup = [COrig, Cdest, 3]
 deplacement(_, Plateau, [CaseOrigine, CaseDestination, 3], NouveauPlateau) :-
     getTaquin2(CaseOrigine, CaseDestination),
@@ -76,13 +75,12 @@ deplacement(_, Plateau, [CaseOrigine, CaseDestination, 3], NouveauPlateau) :-
     nth0(CaseDestination, Plateau, Valeur1),
     setTableau(Valeur1, CaseTmp, NouveauPlateauTmp1, NouveauPlateau).
 
-
-
 % Retourne le nombre de pions d'un joueur
 nombrePions(Joueur, Plateau, Nombre) :-
     sublist(=(Joueur), Plateau, Liste),
     length(Liste, Nombre).
 
+% Retourne les index des différents cases vide du plateau
 listeVide(Plateau, Liste) :-
     listeVide(0, Plateau, Liste).
 listeVide(_Compteur, [], _Liste).
@@ -94,7 +92,6 @@ listeVide(Compteur, [X|R1], Liste) :-
     X \= 0,
     Compteur1 is Compteur + 1,
     listeVide(Compteur1, R1, Liste).
-
 
 % Modification du plateau
 setTableau(Valeur, 0, [_|R], [Valeur|R]) :- !.
@@ -188,56 +185,68 @@ getTaquin2(8, 6).
 % Trois pions alignés sur une ligne
 gagner(Joueur, [Joueur,Joueur,Joueur,_,_,_,_,_,_]) :- 
     Joueur \= 0, 
-    writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+    getPion(Joueur, Pion),
+    writef('Victoire des %w!', [Pion]).
 gagner(Joueur, [_,_,_,Joueur,Joueur,Joueur,_,_,_]) :- 
     Joueur \= 0,
-    writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+    getPion(Joueur, Pion),
+    writef('Victoire des %w!', [Pion]).
 gagner(Joueur, [_,_,_,_,_,_,Joueur,Joueur,Joueur]) :- 
     Joueur \= 0,
-    writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+    getPion(Joueur, Pion),
+    writef('Victoire des %w!', [Pion]).
 
 % Trois pions align\u00E9s sur une colonne
 gagner(Joueur, [Joueur,_,_,Joueur,_,_,Joueur,_,_]) :- 
     Joueur \= 0,
-    writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+    getPion(Joueur, Pion),
+    writef('Victoire des %w!', [Pion]).
 gagner(Joueur, [_,Joueur,_,_,Joueur,_,_,Joueur,_]) :- 
     Joueur \= 0, 
-    writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+    getPion(Joueur, Pion),
+    writef('Victoire des %w!', [Pion]).
 gagner(Joueur, [_,_,Joueur,_,_,Joueur,_,_,Joueur]) :- 
     Joueur \= 0, 
-    writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+    getPion(Joueur, Pion),
+    writef('Victoire des %w!', [Pion]).
 
 % Trois pions align\u00E9s sur une diagonale
 gagner(Joueur, [Joueur,_,_,_,Joueur,_,_,_,Joueur]) :- 
     Joueur \= 0, 
-    writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+    getPion(Joueur, Pion),
+    writef('Victoire des %w!', [Pion]).
 gagner(Joueur, [_,_,Joueur,_,Joueur,_,Joueur,_,_]) :- 
     Joueur \= 0, 
-    writef('Le joueur %w a gagn\u00E9!', [Joueur]).
+    getPion(Joueur, Pion),
+    writef('Victoire des %w!', [Pion]).
 
-% Unifie la séquence [E1, E2, E3] avec la Ième ligne du plateau PL
-row(PL, I, [E1, E2, E3]) :-
-    I1 is (I - 1) * 3, nth0(I1, PL, E1),
-    I2 is 3 * I - 2, nth0(I2, PL, E2),
-    I3 is 3 * I - 1, nth0(I3, PL, E3).
+% Retourne le symbole d'un pion
+getPion(-1, 'X').
+getPion(1, 'O').
 
-% Unifie la séquence [E1, E2, E3] avec la Jème colonne du plateau PL
-column(PL, J, [E1, E2, E3]) :-
-    nth1(J, PL, E1),
-    I2 is J + 3, nth1(I2, PL, E2),
-    I3 is J + 6, nth1(I3, PL, E3).
 
-% Unifie la séquence [E1, E2, E3] avec la Nème diagonale du plateau PL
-diagonal(PL, 1, [E1,E2,E3]) :-
-    !, nth1(1, PL, E1),
-    nth1(5, PL, E2),
-    nth1(9, PL, E3).
+% Unifie la séquence [E1, E2, E3] avec la Ième ligne du Plateau
+ligne(Plateau, I, [E1, E2, E3]) :-
+    I1 is (I - 1) * 3, nth0(I1, Plateau, E1),
+    I2 is 3 * I - 2, nth0(I2, Plateau, E2),
+    I3 is 3 * I - 1, nth0(I3, Plateau, E3).
 
-diagonal(PL, 2, [E1,E2,E3]) :-
-    nth1(3, PL, E1),
-    nth1(5, PL, E2),
-    nth1(7, PL, E3).
+% Unifie la séquence [E1, E2, E3] avec la Jème colonne du Plateau
+colonne(Plateau, J, [E1, E2, E3]) :-
+    nth1(J, Plateau, E1),
+    I2 is J + 3, nth1(I2, Plateau, E2),
+    I3 is J + 6, nth1(I3, Plateau, E3).
 
+% Unifie la séquence [E1, E2, E3] avec la Nème diagonale du Plateau
+diagonale(Plateau, 1, [E1,E2,E3]) :-
+    !, nth1(1, Plateau, E1),
+    nth1(5, Plateau, E2),
+    nth1(9, Plateau, E3).
+
+diagonale(Plateau, 2, [E1,E2,E3]) :-
+    nth1(3, Plateau, E1),
+    nth1(5, Plateau, E2),
+    nth1(7, Plateau, E3).
+
+% Retourne le coup inverse
 coupInverse([CaseDestination, CaseOrigine, TypePlacement], [CaseOrigine, CaseDestination, TypePlacement]).
-
-
