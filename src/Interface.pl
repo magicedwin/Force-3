@@ -25,6 +25,16 @@ choixPartie(Choix) :-
     writeln('Choix invalide!'),
     choixPartie(Choix).
 
+choixPions(Choix) :-
+    writeln('Quel est votre choix ?'),
+    read(Choix),
+    integer(Choix),
+    between(0, 1, Choix),
+    !.
+choixPions(Choix) :-
+    writeln('Choix invalide!'),
+    choixPions(Choix).
+
 % Lance la partie en fonction du choix du joueur
 lancerPartie(0) :-
     nl,
@@ -35,7 +45,14 @@ lancerPartie(0) :-
     choixPartie(Niveau),
     board(Plateau),
     Niveau1 is Niveau + 3,
-    jouer(Plateau, Niveau1).
+    writeln('Choix Pions :'),
+    writeln('\t0.\tO'),
+    writeln('\t1.\tX'),
+    choixPions(Pions),
+    (Pions == 0 ->
+        jouer(Plateau, Niveau1, 1)
+    ;   jouerIA(Plateau, Niveau1, _DernierCoup, -1)
+    ).
 lancerPartie(1) :-
 	nl,
     writeln('Niveau (IA1) :'),
@@ -56,32 +73,33 @@ lancerPartie(1) :-
 lancerPartie(2) :- !.
 
 % Au tour du joueur de jouer
-jouer(Plateau, Niveau) :-
+jouer(Plateau, Niveau, Joueur) :-
     afficherPlateau(Plateau),
     effectuerAction(Coup),
-    sauvegarderCoup(1, Coup),
-    DernierCoup = Coup,
+    sauvegarderCoup(Joueur, Coup),
     board(NouveauPlateau),
     afficherPlateau(NouveauPlateau),
-    not(gagner(1, NouveauPlateau)),
-    jouerIA(NouveauPlateau, Niveau, DernierCoup).
+    not(gagner(Joueur, NouveauPlateau)),
+    Adversaire is -Joueur,
+    jouerIA(NouveauPlateau, Niveau, Coup, Adversaire).
 
 % Au tour de l'IA de jouer
-jouerIA(Plateau, Niveau, DernierCoup) :-
+jouerIA(Plateau, Niveau, DernierCoup, Joueur) :-
     nl,
     board(_PlateauTemporaire),
-    nombrePions(-1, Plateau, Nombre),
+    nombrePions(Joueur, Plateau, Nombre),
     (Nombre == 0 ->
         listeVide(Plateau, Liste),
         random_member(Index, Liste),
-        sauvegarderCoup(-1, [-1, Index, 0])
-    ;   minimax(Niveau, Plateau, -1, _Value, Coup, DernierCoup),
-        sauvegarderCoup(-1, Coup)
+        sauvegarderCoup(Joueur, [-1, Index, 0])
+    ;   minimax(Niveau, Plateau, Joueur, _Value, Coup, DernierCoup),
+        sauvegarderCoup(Joueur, Coup)
     ),
     board(NouveauPlateau),
     afficherPlateau(NouveauPlateau),
-    not(gagner(-1, NouveauPlateau)), !,
-    jouer(NouveauPlateau, Niveau).
+    not(gagner(Joueur, NouveauPlateau)), !,
+    Adversaire is -Joueur,
+    jouer(NouveauPlateau, Niveau, Adversaire).
 
 % IA vs. IA
 observerIA(Niveau1, Niveau2, Plateau, DernierCoup) :-
